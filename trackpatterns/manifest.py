@@ -16,9 +16,9 @@ TRIG is stock's global change, which clears every override.
 STATUS (21 Oct 2026): in progress. Engine and glue host-tested; the sites
 below were read from the contributor's original 1.40C (INVESTIGATION.md
 section 4) and are guarded by their stock bytes. Run under the ColdFire
-emulator; on one MKII (build OCTABAM1, 21 Oct 2026) the gesture, following
-again and a global change passed for T1; MIDI tracks not on a unit yet;
-the trig LEDs (build OCTABAM2) under the emulator only (TESTING.md).
+emulator; on one MKII (build OCTABAM2, 21 Oct 2026) the contributor
+reported the functional tests and the trig LED checks as passed. Cycles
+and memory not measured (TESTING.md).
 
   0x400a2d76  audio tick: the pattern argument of 0x4009d1e8
   0x400a39c0  MIDI tick: the pattern argument of 0x4009cf4c
@@ -44,7 +44,7 @@ MODULE = Module(
     category=Category.MACHINES,
     author="pgstath", author_url="https://github.com/pgstath",
     proof=Proof.HARDWARE,
-    proof_note="MKII, OCTABAM1, 21 Oct 2026: gesture, follow, global change on T1; trig LEDs (OCTABAM2) emulator only",
+    proof_note="MKII, OCTABAM2, 21 Oct 2026: functional tests and trig LEDs passed (contributor's report); cycles not measured",
     doc="Each track plays its own pattern of the playing bank; changes land at the track's loop end.",
     linked=(Linked("trackpatterns", "modules/trackpatterns/trackpatterns.s", cpu="5475", dram=True),),
     detours=(

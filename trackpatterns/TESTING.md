@@ -182,13 +182,34 @@ rebuilt every 50 ms), `src[T1]`, GRID REC, PATTERN held.
 | MKI against MKII | the same LED timeline (event times within 1 ms) |
 | the gesture run of build 1, repeated (`--mkii`) | the same 72 events and values in the same order, trigs at the same times; the overrides clear 20 ms earlier at the global change (22.27 s, not 22.29 s), because the LED pass now notices the new pattern first |
 
-Not run: the LEDs on a unit (which colour each LED of a pair shows, how the
-blink reads), MIDI mode's LEDs under the emulator (host-tested only),
-patterns longer than 16 steps under the emulator, cycle cost of the LED
-pass.
+Not run under the emulator: MIDI mode's LEDs (host-tested only), patterns
+longer than 16 steps, the cycle cost of the LED pass.
+
+### On the unit: MKII, 21 Oct 2026, reported by pgstath
+
+Image `OCTABAM2` above (`53ccd9fe…`), the test project and steps as for
+build 1, plus the four LED checks. The contributor reported every test
+below as passed; nothing more detailed was reported.
+
+| # | test | result |
+|---|---|---|
+| 1 | stock PATTERN + TRIG 3 switches every track to A03 at the pattern's end | pass |
+| 2 | hold TRACK 1, hold PATTERN, TRIG 3: popup `T1 ▸ A03`, screen stays A01, T1 switches at its own loop start | pass |
+| 3 | TRACK 1 + PATTERN + TRIG 1: `T1 FOLLOWS`, T1 back on A01 at its loop start | pass |
+| 4 | MIDI mode, TRACK 1 + PATTERN + TRIG 3: `M1 ▸ A03`, M1's notes move from 1, 9 to 5, 13 at its loop start, no hanging note across the switch | pass |
+| 5 | with T1 on A03, PATTERN + TRIG 2 (no TRACK held): A02 at the pattern's end, T1 on A02's trigs | pass |
+| 6 | the gesture while stopped, then PLAY: T1 plays A03 from step 1 | pass |
+| 7 | a tapped (latched) PATTERN then TRACK + TRIG, TRACK pressed after PATTERN, a chain (PATTERN + two trigs), GRID REC editing | pass |
+| 8 | save, power cycle: the project intact, every track following the global pattern again | pass |
+| L1 | T1 on A03, outside GRID REC: A03's trigs blink about once a second, the playhead keeps moving | pass |
+| L2 | GRID REC: A01's trigs blink | pass |
+| L3 | hold TRACK 1 + PATTERN: A03's key lit as the current pattern | pass |
+
+Not reported: how long it ran, which colour each LED of a pair shows,
+other tracks than T1 and M1, CPU load, cycles.
 
 ## Not yet
 
-On the unit: build 2's LEDs, MIDI tracks, the stopped case, the latched
-PATTERN, save and power cycle, a long run. Anywhere: the track's speed
-from its own pattern, persistence, cycle counts.
+On the unit: a long run, more tracks at once, other trig modes than
+TRACKS. Anywhere: the track's speed from its own pattern, persistence,
+cycle counts, memory accounting.
