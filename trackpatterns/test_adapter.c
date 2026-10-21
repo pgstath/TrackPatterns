@@ -18,18 +18,32 @@ unsigned tp_length_pattern(unsigned track);
 unsigned tp_track_length(unsigned track, unsigned stock_len);
 unsigned tp_key(unsigned track, unsigned pattern);
 unsigned tp_gesture(unsigned pattern);
+int tp_leds(unsigned slot);
+void tp_playhead(unsigned step);
 void tp_transport_start(void);
 
 static uint8_t seq[0x100];             /* 0x80006500.. */
 static uint8_t blob[4 * 0x9b340];      /* banks A..D at 0x400e21e0 */
 static uint8_t keys[64 * 24];          /* key states at 0x46c7d8ee + 24 * code */
 static uint8_t midi_mode[4];           /* 0x80000012 */
+static uint8_t leds[17];               /* steady LED bits at 0x460ba98c */
+static uint8_t slots[4 * 14];          /* LED callbacks at 0x460e762c + 14 * slot */
+static uint8_t ui[5];                  /* track 0x100b14cc .. pattern 0x100b14d0 */
+static uint8_t page[4], grid_rec[4], trig_mode[4], timer[4], light_track[4];
 
 volatile uint8_t *tp_host_addr(uint32_t a) {
     if (a >= 0x80006500u && a < 0x80006500u + sizeof seq) return seq + (a - 0x80006500u);
     if (a >= 0x400e21e0u && a < 0x400e21e0u + sizeof blob) return blob + (a - 0x400e21e0u);
     if (a >= 0x46c7d8eeu && a < 0x46c7d8eeu + sizeof keys) return keys + (a - 0x46c7d8eeu);
+    if (a >= 0x460ba98cu && a < 0x460ba98cu + sizeof leds) return leds + (a - 0x460ba98cu);
+    if (a >= 0x460e762cu && a < 0x460e762cu + sizeof slots) return slots + (a - 0x460e762cu);
+    if (a >= 0x100b14ccu && a < 0x100b14ccu + sizeof ui) return ui + (a - 0x100b14ccu);
     if (a == 0x80000012u) return midi_mode;
+    if (a == 0x80000000u) return light_track;
+    if (a == 0x460d1e04u) return page;
+    if (a == 0x460d1736u) return grid_rec;
+    if (a == 0x460d16f0u) return trig_mode;
+    if (a == 0xfc07c00cu) return timer;
     printf("FAIL: adapter read an unexpected address 0x%08x\n", a);
     ++failures;
     static uint8_t junk[8];
@@ -46,6 +60,12 @@ static void run(unsigned track, unsigned len, unsigned from, unsigned steps, uns
 
 static uint8_t *pattern(unsigned bank, unsigned p) { return blob + bank * 0x9b340u + p * 0x8ed8u; }
 static void key_state(unsigned code, uint32_t v) { memcpy(keys + 24 * code, &v, 4); }
+static void set32(uint8_t *at, uint32_t v) { memcpy(at, &v, 4); }
+static void set_leds(const char *bytes) { memset(leds, 0, sizeof leds); memcpy(leds, bytes, 4); }
+static int leds_are(uint8_t b0, uint8_t b1, uint8_t b2, uint8_t b3) {
+    uint8_t want[17] = {b0, b1, b2, b3};
+    return memcmp(leds, want, sizeof leds) == 0;
+}
 
 int main(void) {
     unsigned out[64];
@@ -170,6 +190,106 @@ int main(void) {
     midi_mode[3] = 0;
     key_state(0x14, 0);
     CHECK(tp_gesture(7) == 0, "TRACK released: stock's again");
+
+    /* The trig LEDs. Slot 1 runs the main page's callback, 2 the PATTERN
+     * layer's, 3 some other page's. A03 T1: trigs 3, 7, 11, 15 and 17;
+     * A03 M1: 5, 13. */
+    set_playing(0, 0);                                    /* A01: clears every override */
+    tp_seq_pattern(0, 0, 0, 0);
+    set32(slots + 14, 0x40043fdcu);
+    set32(slots + 28, 0x400353d4u);
+    set32(slots + 42, 0x40012345u);
+    a03[6] = 0x44; a03[7] = 0x44; a03[5] = 0x01;
+    a03[0x48d0 + 6] = 0x10; a03[0x48d0 + 7] = 0x10;
+    const uint32_t light = 0, dark = 1u << 26;
+    set32(grid_rec, 1);
+    set32(timer, dark);
+    set_leds("\x01\x01\x01\x01");                         /* stock's GRID REC: A01's 1, 5, 9, 13 */
+    CHECK(tp_leds(1) == -1 && leds_are(1, 1, 1, 1), "T1 follows: GRID REC as stock");
+    set_transport(0);
+    tp_key(0, 2);                                         /* stopped: T1 on A03 at once */
+    tp_key(8, 2);                                         /* and M1 */
+    set_transport(1);
+    set32(timer, light);
+    CHECK(tp_leds(1) == -1 && leds_are(1, 1, 1, 1), "T1 on A03, GRID REC, light half: stock's A01 trigs");
+    set32(timer, dark);
+    leds[4] = 0x5a;                                       /* LEDs past the trig keys */
+    CHECK(tp_leds(1) == 0, "dark half: T1's running light to draw again");
+    CHECK(leds[0] == 0 && leds[3] == 0 && leds[4] == 0x5a, "dark half: the trig LEDs only go out");
+    light_track[0] = 3;
+    midi_mode[3] = 1;
+    set_leds("\x01\x01\x01\x01");
+    CHECK(tp_leds(1) == 11, "MIDI mode: M4's running light (0x80000000 = 3)");
+    midi_mode[3] = 0;
+    light_track[0] = 0;
+
+    /* The running light again: in GRID REC only on the page shown. */
+    set_leds("\0\0\0\0");
+    tp_playhead(5);
+    CHECK(leds_are(0, 0x0c, 0, 0), "step 6: both of key 6's LEDs");
+    set_leds("\0\0\0\0");
+    tp_playhead(20);
+    CHECK(leds_are(0, 0, 0, 0), "step 21 is on page 2, GRID REC shows page 1");
+    set32(page, 1);
+    tp_playhead(20);
+    CHECK(leds_are(0, 0x03, 0, 0), "page 2 shown: key 5");
+    set32(page, 0);
+
+    /* Outside GRID REC, TRACKS mode: stock drew only the running light
+     * (key 2: LEDs 2, 3); A03's trigs go over it in the light half. */
+    set32(grid_rec, 0);
+    set_leds("\x0c\0\0\0");
+    set32(timer, light);
+    CHECK(tp_leds(1) == -1, "nothing to draw again outside GRID REC");
+    CHECK(leds_are(0x1c, 0x10, 0x10, 0x10), "A03's 3, 7, 11, 15 on the keys' first LEDs, running light kept (%02x %02x %02x %02x)",
+          leds[0], leds[1], leds[2], leds[3]);
+    set_leds("\x0c\0\0\0");
+    set32(timer, dark);
+    tp_leds(1);
+    CHECK(leds_are(0x0c, 0, 0, 0), "dark half: stock's running light only");
+    set32(timer, light);
+    set32(page, 1);
+    set_leds("\x0c\0\0\0");
+    tp_leds(1);
+    CHECK(leds_are(0x0d, 0, 0, 0), "page 2: step 17");
+    set32(page, 0);
+    set32(trig_mode, 1);
+    set_leds("\x33\x33\x33\x33");
+    tp_leds(1);
+    CHECK(leds_are(0x33, 0x33, 0x33, 0x33), "CHROMATIC: stock's");
+    set32(trig_mode, 0);
+    tp_leds(3);
+    CHECK(leds_are(0x33, 0x33, 0x33, 0x33), "another page's callback: stock's");
+    midi_mode[3] = 1;                                     /* MIDI mode: M1 */
+    set_leds("\x0c\0\0\0");
+    tp_leds(1);
+    CHECK(leds_are(0x0c, 0x01, 0, 0x01), "M1 on A03: 5, 13 (%02x %02x %02x %02x)",
+          leds[0], leds[1], leds[2], leds[3]);
+    midi_mode[3] = 0;
+    ui[0] = 1;                                            /* T2 follows */
+    set_leds("\x0c\0\0\0");
+    tp_leds(1);
+    CHECK(leds_are(0x0c, 0, 0, 0), "T2 follows: untouched");
+    ui[0] = 0;
+
+    /* The PATTERN layer: stock lit A01 (key 1, first LED) and A02, A03 as
+     * patterns with content (second LEDs of keys 2, 3). */
+    set_leds("\x29\x00\x00\x00");
+    tp_leds(2);
+    CHECK(leds_are(0x29, 0, 0, 0), "no TRACK held: stock's");
+    key_state(0x10, 2);                                   /* TRACK 1 held */
+    tp_leds(2);
+    CHECK(leds_are(0x1a, 0, 0, 0), "T1 plays A03: key 3 current, A01 with content (%02x)", leds[0]);
+    tp_key(0, 4);                                         /* playing: T1 queues A05 */
+    set_leds("\x29\x00\x00\x00");
+    tp_leds(2);
+    CHECK(leds_are(0x1a, 0x03, 0, 0), "A05 queued: both of key 5's LEDs (%02x %02x)", leds[0], leds[1]);
+    key_state(0x10, 0);
+    key_state(0x11, 2);                                   /* TRACK 2 held: T2 follows */
+    set_leds("\x29\x00\x00\x00");
+    tp_leds(2);
+    CHECK(leds_are(0x29, 0, 0, 0), "T2 follows: stock's");
+    key_state(0x11, 0);
 
     if (failures) { printf("%d failure(s)\n", failures); return 1; }
     printf("TRACK PATTERNS adapter: all host tests passed\n");

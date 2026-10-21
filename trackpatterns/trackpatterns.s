@@ -814,7 +814,7 @@ tp_gesture:
 	move.l %d2,-(%sp)
 	move.l #1187502702,%a0
 	clr.l %d1
-.L214:
+.L213:
 	move.l (%a0),%d0
 	lea (24,%a0),%a0
 	tst.l %d0
@@ -822,7 +822,7 @@ tp_gesture:
 	addq.l #1,%d1
 	moveq #8,%d2
 	cmp.l %d1,%d2
-	jne .L214
+	jne .L213
 	move.l (%sp)+,%d2
 	rts
 .L221:
@@ -838,6 +838,368 @@ tp_gesture:
 	addq.l #1,%d0
 	rts
 	.size	tp_gesture, .-tp_gesture
+	.align	2
+	.globl	tp_leds
+	.type	tp_leds, @function
+tp_leds:
+	lea (-40,%sp),%sp
+	moveq #14,%d1
+	move.l 44(%sp),%d0
+	movem.l #3132,(%sp)
+	moveq #15,%d4
+	muls.l %d1,%d0
+	move.l %d0,%a0
+	add.l #1175352876,%a0
+	move.l (%a0),%d3
+	mvz.b -2147457602,%d2
+	cmp.l %d2,%d4
+	jcc .L223
+	clr.l %d2
+.L223:
+	move.b -2147457603,%d0
+	moveq #15,%d5
+	mvz.b %d0,%d1
+	cmp.l %d1,%d5
+	jcs .L242
+	ext.w %d0
+	mvz.w %d0,%d0
+	lsl.l #4,%d0
+	add.l %d2,%d0
+	move.l %d0,-(%sp)
+	pea tp_state
+	jsr tp_global
+	addq.l #8,%sp
+	cmp.l #1074020316,%d3
+	jeq .L271
+.L225:
+	cmp.l #1073959892,%d3
+	jne .L226
+	move.l #1187502702,%a0
+	clr.l %d0
+.L238:
+	lea (24,%a0),%a0
+	tst.l -24(%a0)
+	jne .L272
+	addq.l #1,%d0
+	moveq #8,%d3
+	cmp.l %d0,%d3
+	jne .L238
+.L226:
+	mov3q.l #-1,%d0
+.L222:
+	movem.l (%sp),#3132
+	lea (40,%sp),%sp
+	rts
+.L242:
+	move.l %d2,%d0
+	move.l %d0,-(%sp)
+	pea tp_state
+	jsr tp_global
+	addq.l #8,%sp
+	cmp.l #1074020316,%d3
+	jne .L225
+.L271:
+	mvz.b 269161676,%d3
+	mov3q.l #7,%d0
+	cmp.l %d3,%d0
+	jcs .L226
+	tst.l -2147483630
+	jeq .L227
+	addq.l #8,%d3
+.L227:
+	lea tp_state,%a0
+	move.b (%a0,%d3.l),%d0
+	jeq .L226
+	mvz.b %d0,%d1
+	subq.l #1,%d1
+	cmp.l %d1,%d2
+	jeq .L226
+	tst.l 1175263030
+	jeq .L228
+	move.l #-66600948,%a0
+	btst #2,(%a0)
+	jeq .L226
+	clr.l %d1
+.L229:
+	mov3q.l #7,%d2
+	and.l %d1,%d2
+	move.l %d1,%d0
+	lsr.l #3,%d0
+	addq.l #1,%d1
+	move.l %d0,%a0
+	mov3q.l #1,%d0
+	add.l #1175169420,%a0
+	lsl.l %d2,%d0
+	move.b (%a0),%d2
+	not.l %d0
+	and.l %d2,%d0
+	move.b %d0,(%a0)
+	moveq #32,%d0
+	cmp.l %d1,%d0
+	jne .L229
+	move.b -2147483648,%d0
+	tst.l -2147483630
+	sne %d1
+	mov3q.l #7,%d2
+	and.l %d2,%d0
+	mvs.b %d1,%d1
+	movem.l (%sp),#3132
+	lsl.l #3,%d1
+	sub.l %d1,%d0
+	lea (40,%sp),%sp
+	rts
+.L272:
+	tst.l -2147483630
+	jeq .L237
+	addq.l #8,%d0
+.L237:
+	lea tp_state,%a1
+	move.b (%a1,%d0.l),%d1
+	jeq .L244
+	mvz.b %d1,%d1
+	subq.l #1,%d1
+.L239:
+	move.b 269161680,%d3
+	moveq #15,%d4
+	and.l %d3,%d4
+	move.l %d4,%d3
+	cmp.l %d4,%d1
+	jeq .L240
+	add.l %d4,%d4
+	mov3q.l #7,%d5
+	lsr.l #2,%d3
+	move.l %d3,%a0
+	add.l #1175169420,%a0
+	move.b (%a0),31(%sp)
+	and.l %d4,%d5
+	move.l %d4,24(%sp)
+	lsr.l #3,%d4
+	move.l 24(%sp),%d3
+	addq.l #1,%d3
+	move.l %d4,36(%sp)
+	mov3q.l #7,%d4
+	and.l %d4,%d3
+	mov3q.l #1,%d4
+	lsl.l %d5,%d4
+	mov3q.l #1,%d5
+	move.l 36(%sp),%a3
+	add.l #1175169420,%a3
+	lsl.l %d3,%d5
+	move.l %d4,%d3
+	not.l %d3
+	move.b 31(%sp),%d4
+	and.l %d4,%d3
+	move.b %d3,(%a0)
+	move.b (%a3),%d3
+	or.l %d5,%d3
+	move.b %d3,(%a3)
+.L240:
+	mvz.w %d1,%d1
+	mov3q.l #7,%d5
+	mov3q.l #7,%d4
+	move.l %d1,%d3
+	lsr.l #2,%d3
+	add.l %d1,%d1
+	move.l %d3,%a2
+	add.l #1175169420,%a2
+	move.b (%a2),31(%sp)
+	and.l %d1,%d5
+	move.l %d1,%d3
+	addq.l #1,%d1
+	and.l %d4,%d1
+	mov3q.l #1,%d4
+	lsr.l #3,%d3
+	add.l #1175169420,%d3
+	lsl.l %d5,%d4
+	mov3q.l #1,%d5
+	lsl.l %d1,%d5
+	move.b 31(%sp),%d1
+	or.l %d4,%d1
+	move.l %d1,24(%sp)
+	move.b 27(%sp),(%a2)
+	move.l %d3,%a2
+	move.l %d5,%d1
+	not.l %d1
+	move.b (%a2),%d4
+	move.w %d4,%a0
+	move.l %a0,%d4
+	and.l %d4,%d1
+	move.b %d1,(%a2)
+	move.b 16(%a1,%d0.l),%d0
+	jeq .L226
+	mvz.b %d0,%d0
+	cmp.l #255,%d0
+	jeq .L241
+	move.l %d0,%d2
+	subq.l #1,%d2
+.L241:
+	mvz.w %d2,%d2
+	mov3q.l #7,%d5
+	mov3q.l #1,%d0
+	mov3q.l #7,%d4
+	move.l %d2,%d1
+	lsr.l #2,%d1
+	add.l %d2,%d2
+	move.l %d1,%a1
+	add.l #1175169420,%a1
+	move.b (%a1),%d3
+	and.l %d2,%d5
+	move.l %d2,%d1
+	lsr.l #3,%d1
+	addq.l #1,%d2
+	and.l %d4,%d2
+	move.l %d1,%a0
+	move.l %d0,%d1
+	add.l #1175169420,%a0
+	lsl.l %d5,%d1
+	lsl.l %d2,%d0
+	or.l %d3,%d1
+	move.b %d1,(%a1)
+	move.b (%a0),%d1
+	or.l %d1,%d0
+	move.b %d0,(%a0)
+	mov3q.l #-1,%d0
+	jra .L222
+.L244:
+	move.l %d2,%d1
+	jra .L239
+.L228:
+	tst.l 1175262960
+	jne .L226
+	move.l -66600948,%d0
+	and.l #67108864,%d0
+	tst.l %d0
+	jne .L226
+	move.l 1175264772,%d2
+	moveq #15,%d5
+	mvz.b -2147457603,%d4
+	cmp.l %d4,%d5
+	jcs .L243
+	move.l #635712,%d5
+	muls.l %d5,%d4
+	move.l %d4,%a0
+.L231:
+	mulu.w #36568,%d1
+	mov3q.l #7,%d4
+	cmp.l %d3,%d4
+	jcs .L232
+	mov3q.l #3,%d5
+	and.l %d5,%d2
+	mulu.w #2330,%d3
+	add.l %d2,%d2
+	sub.l %d2,%d1
+	add.l %a0,%d1
+	add.l %d3,%d1
+	move.l %d1,%a0
+	add.l #1074668006,%a0
+	move.b (%a0),%d3
+	add.l #1074668007,%d1
+	move.l %d1,%a0
+	mvz.b (%a0),%d1
+	mvz.b %d3,%d3
+	lsl.l #8,%d3
+	or.l %d1,%d3
+.L235:
+	mvz.w %d0,%d1
+	move.l %d1,%d2
+	lsr.l #2,%d2
+	btst %d0,%d3
+	jeq .L234
+	add.l %d1,%d1
+	move.l %d2,%a0
+	add.l #1175169420,%a0
+	move.b (%a0),%d4
+	mov3q.l #7,%d2
+	and.l %d2,%d1
+	mov3q.l #1,%d2
+	move.w %d4,%a2
+	lsl.l %d1,%d2
+	move.l %a2,%d5
+	or.l %d5,%d2
+	move.b %d2,(%a0)
+.L234:
+	addq.l #1,%d0
+	moveq #16,%d1
+	cmp.l %d0,%d1
+	jne .L235
+	mov3q.l #-1,%d0
+	jra .L222
+.L232:
+	mov3q.l #3,%d5
+	and.l %d5,%d2
+	mulu.w #2224,%d3
+	add.l #848,%d3
+	add.l %d2,%d2
+	sub.l %d2,%d1
+	add.l %a0,%d1
+	add.l %d3,%d1
+	move.l %d1,%a0
+	add.l #1074668006,%a0
+	move.b (%a0),%d3
+	add.l #1074668007,%d1
+	move.l %d1,%a0
+	mvz.b (%a0),%d1
+	mvz.b %d3,%d3
+	lsl.l #8,%d3
+	or.l %d1,%d3
+	jra .L235
+.L243:
+	sub.l %a0,%a0
+	jra .L231
+	.size	tp_leds, .-tp_leds
+	.align	2
+	.globl	tp_playhead
+	.type	tp_playhead, @function
+tp_playhead:
+	lea (-12,%sp),%sp
+	move.l %a2,-(%sp)
+	move.l %d2,-(%sp)
+	tst.l 1175263030
+	jeq .L274
+	move.l 24(%sp),%d0
+	lsr.l #4,%d0
+	cmp.l 1175264772.l,%d0
+	jeq .L274
+	move.l (%sp)+,%d2
+	move.l (%sp)+,%a2
+	lea (12,%sp),%sp
+	rts
+.L274:
+	moveq #15,%d0
+	mov3q.l #7,%d2
+	and.l 24(%sp),%d0
+	move.l %d0,%d1
+	lsr.l #2,%d0
+	add.l %d1,%d1
+	move.l %d0,%a0
+	mov3q.l #7,%d0
+	add.l #1175169420,%a0
+	move.b (%a0),11(%sp)
+	and.l %d1,%d0
+	move.l %d0,12(%sp)
+	move.l %d1,%d0
+	addq.l #1,%d1
+	lsr.l #3,%d0
+	and.l %d2,%d1
+	move.l 12(%sp),%d2
+	move.l %d0,%a2
+	mov3q.l #1,%d0
+	add.l #1175169420,%a2
+	lsl.l %d2,%d0
+	move.l %d0,16(%sp)
+	mov3q.l #1,%d0
+	lsl.l %d1,%d0
+	move.b 11(%sp),%d1
+	or.l 16(%sp),%d1
+	move.b %d1,(%a0)
+	move.b (%a2),%d1
+	or.l %d1,%d0
+	move.b %d0,(%a2)
+	move.l (%sp)+,%d2
+	move.l (%sp)+,%a2
+	lea (12,%sp),%sp
+	rts
+	.size	tp_playhead, .-tp_playhead
 	.section	.rodata
 	.type	follows.0, @object
 	.size	follows.0, 9
@@ -907,7 +1269,7 @@ tp_length_entry:
 
 | ---- the detour stubs ------------------------------------------------------
         .global tp_audio_tick, tp_midi_tick, tp_audio_rebuild, tp_midi_rebuild
-        .global tp_audio_length, tp_midi_length, tp_pattern_key
+        .global tp_audio_length, tp_midi_length, tp_pattern_key, tp_led_pass
 
 | 0x400a2d76, the tick's audio pass, pushing 0x4009d1e8(track, bank,
 | pattern, step, n): the step is already pushed, the pattern stock chose is
@@ -1045,6 +1407,44 @@ tp_pattern_key:
 .Lkey_stock:
         tst.w   0x460d1ab6              | displaced
         jmp     0x40056b56              | bnes 0x40056b98
+
+| 0x4007e9b6, inside the LED dispatcher 0x4007e998(slot): it calls the LED
+| callback the RAM table holds for the slot (0x460e762c + 14 * slot: the
+| main page's 0x40043fdc, the PATTERN layer's 0x400353d4, ...), then
+| restores d2 and tail-calls the flush 0x400136a8 at 0x4007e9bc. The stub
+| replays the call, lets tp_leds adjust the trig LEDs the callback drew
+| (steady bits 0x460ba98c, nothing else), and joins stock before the
+| flush, which sends what changed. When tp_leds put the trig LEDs out
+| (GRID REC's dark half) it names a track, and the stub draws that track's
+| running light again from stock's own answers: running 0x4009b290(track)
+| == 1, then the step 0x4009b2b0(track) (Play Modes' mapped step when it
+| is installed), as 0x40044516..0x40044528 do. d2 = the slot, kept by
+| every callee; d0/d1/a0/a1 are free (the flush takes none). No branch
+| lands inside the span (the dispatcher's beqs goes to 0x4007e9bc).
+| Displaced: movel %d2,%sp@- ; jsr %a0@ ; addql #4,%sp (6).
+tp_led_pass:
+        move.l  %d2,-(%sp)              | displaced: the slot
+        jsr     (%a0)                   | displaced: the slot's LED callback
+        addq.l  #4,%sp                  | displaced
+        move.l  %d2,-(%sp)
+        jsr     tp_leds                 | a track on its own pattern: the trig LEDs
+        addq.l  #4,%sp
+        tst.l   %d0
+        bmi.s   .Lled_done
+        move.l  %d0,-(%sp)              | the running light's track
+        move.l  %d0,-(%sp)
+        jsr     0x4009b290              | running?
+        addq.l  #4,%sp
+        moveq   #1,%d1
+        cmp.l   %d1,%d0
+        bne.s   .Lled_drop
+        jsr     0x4009b2b0              | its step (the track is still on the stack)
+        move.l  %d0,(%sp)
+        jsr     tp_playhead             | light its key again
+.Lled_drop:
+        addq.l  #4,%sp
+.Lled_done:
+        jmp     0x4007e9bc              | movel %sp@+,%d2 ; jmp 0x400136a8 (the flush)
 
 | Explicitly initialised, loader-owned DRAM, zeroed: every track follows
 | the global pattern until a change is queued. The C's _Static_assert pins

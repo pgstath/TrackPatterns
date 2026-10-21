@@ -32,6 +32,16 @@ What the suites cover:
   queues for T2 with the toast `T2 > B05`; the lowest held TRACK key wins;
   MIDI mode addresses M5, not T5; the global pattern's trig makes the track
   follow again; a key past TRACK 8 is not a TRACK key.
+- The trig LEDs on fake LED, UI and timer memory: a following track and
+  other pages are left as stock drew them; GRID REC's dark half puts only
+  the 32 trig LEDs out and names the running light's track (M4 in MIDI
+  mode); the playhead is relit only on the page GRID REC shows; outside
+  GRID REC the playing pattern's trigs go over stock's running light, page
+  2 included, and not in CHROMATIC; MIDI tracks read the MIDI record; the
+  PATTERN layer with TRACK 1 held lights T1's pattern, its queued change
+  and the global pattern as one with content. Planted defects fail them
+  (inverted blink, 6 failures; a key off by one, 3; no running light
+  redraw, 2; overwriting stock's LEDs, 3; the page check dropped, 1).
 
 Planted defects fail them: a loop-start test that ignores the repeated step
 (5 engine failures), a global change that no longer clears (2 adapter, 9
@@ -142,8 +152,43 @@ bank A, T1 trigs A01 1/5/9/13, A02 2/10, A03 3/7/11/15; M1 trigs A01
 
 Not reported: how long it ran, other tracks, CPU load, cycles.
 
+## Build 2: the trig LEDs (21 Oct 2026, emulator only)
+
+`make image REMIX=trackpatterns-test BUILD=2`, same tree and OS; adds the
+eighth detour `0x4007e9b6 -> tp_led_pass`. `tp_state` at `0x40a96304`.
+
+| file | SHA-256 |
+|---|---|
+| `OCTATRACK_OCTABAM2.bin` | `53ccd9fe47002bc4a387a1bc343d77fc6f75f5bc5953172d6a45d7c041aa4ef3` |
+| `OCTATRACK_OS1.40C_OCTABAM2.syx` | `f4ed7ea63a741b9818e13b4e623ec0c06e61e1520e6c0c7cf1f0aa957dda1ee2` |
+| `mainos_bus.bin` | `56372a524128051a1eb5210a97a1cc678b1b03689a4867e47145a2afa3e03851` |
+
+**Stock first** (`STEPTPM`, playing A01): outside GRID REC the trig keys
+show only the running light (both LEDs of the playhead's key, moving every
+100 ms at 152 BPM); GRID REC shows A01's T1 trigs on keys 1, 5, 9, 13 (first
+LEDs) plus second LEDs the project's own data sets; with PATTERN held, A01's
+key lights its first LED and A02, A03 their second (patterns with content).
+
+**Run** (`--mkii`, then the same as an MKI): play; the gesture puts T1 on
+A03 (lands at 15.97 s); 3 s later GRID REC on for 2 s, off; then TRACK 1 +
+PATTERN held for 0.8 s. Watched: the trig LED bytes `0x460ba98c..f` (state
+rebuilt every 50 ms), `src[T1]`, GRID REC, PATTERN held.
+
+| | result |
+|---|---|
+| T1 on A03, outside GRID REC | A03's trigs (LEDs 4, 12, 20, 28: keys 3, 7, 11, 15) on for about 500 ms, off for about 500 ms; the running light moves through both halves |
+| T1 on A03, GRID REC | stock's A01 view for about 500 ms, then about 500 ms with only the running light, repeating |
+| TRACK 1 + PATTERN held | LEDs 1, 3, 4: A03 (key 3) as the current pattern, A01 and A02 as patterns with content |
+| MKI against MKII | the same LED timeline (event times within 1 ms) |
+| the gesture run of build 1, repeated (`--mkii`) | the same 72 events and values in the same order, trigs at the same times; the overrides clear 20 ms earlier at the global change (22.27 s, not 22.29 s), because the LED pass now notices the new pattern first |
+
+Not run: the LEDs on a unit (which colour each LED of a pair shows, how the
+blink reads), MIDI mode's LEDs under the emulator (host-tested only),
+patterns longer than 16 steps under the emulator, cycle cost of the LED
+pass.
+
 ## Not yet
 
-On the unit: MIDI tracks, the stopped case, the latched PATTERN, save and
-power cycle, a long run. Anywhere: the track's speed from its own pattern,
-persistence, trig LEDs per track, cycle counts.
+On the unit: build 2's LEDs, MIDI tracks, the stopped case, the latched
+PATTERN, save and power cycle, a long run. Anywhere: the track's speed
+from its own pattern, persistence, cycle counts.

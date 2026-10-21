@@ -41,6 +41,23 @@ enum {
     MIDI_MODE   = 0x80000012u, /* nonzero: the TRACK keys address M1..M8 (Play Modes) */
 };
 
+/* --- the trig LEDs (INVESTIGATION.md "Anchors"; octabam PANEL.md section 8) --- */
+enum {
+    LED_ON      = 0x460ba98cu, /* steady on/off bits: LED id n = byte n / 8, bit n % 8;
+                                  trig key k is the pair 2k (sample trigs) and 2k + 1 */
+    LED_SLOTS   = 0x460e762cu, /* + 14 * slot: the LED callback the dispatcher calls   */
+    LED_MAIN    = 0x40043fdcu, /* the main page's: GRID REC trigs, TRACKS mode flashes */
+    LED_PATTERN = 0x400353d4u, /* the PATTERN layer's: the patterns on the trig keys   */
+    UI_TRACK    = 0x100b14ccu, /* the current track 0..7 (MIDI mode: M1..M8)           */
+    LIGHT_TRACK = 0x80000000u, /* the track the running light follows (0x40044516)     */
+    UI_PATTERN  = 0x100b14d0u, /* the pattern the UI shows and edits                   */
+    UI_PAGE     = 0x460d1e04u, /* the trig page GRID REC shows, 0..3                   */
+    GRID_REC    = 0x460d1736u,
+    TRIG_MODE   = 0x460d16f0u, /* 0 TRACKS                                             */
+    TIMER       = 0xfc07c00cu, /* DTIM3's count: 132 MHz, free-running                 */
+    BLINK_SHIFT = 26u,         /* half a period = 2^26 counts, about 0.5 s             */
+};
+
 /* Loader-owned DRAM, zeroed at boot (hooks.s): zero = every track follows. */
 extern TpState tp_state;
 extern char tp_toast[16];
@@ -141,9 +158,100 @@ unsigned tp_key(unsigned track, unsigned pattern) {
  * that track instead of changing the global pattern. The lowest held TRACK
  * key wins. Returns 0 to leave the press to stock, 1 when it took the press,
  * 2 when it took it and queued a change (tp_toast filled). */
-unsigned tp_gesture(unsigned pattern) {
+static unsigned tp_held_track(void) {
     for (unsigned n = 0; n < 8; ++n)
         if (U32(KEY_STATE + KEY_STRIDE * (KEY_TRACK_1 + n)))
-            return 1u + tp_key(U32(MIDI_MODE) ? n + 8u : n, pattern);
-    return 0;
+            return U32(MIDI_MODE) ? n + 8u : n;
+    return TP_TRACKS;
+}
+
+unsigned tp_gesture(unsigned pattern) {
+    unsigned track = tp_held_track();
+    return track < TP_TRACKS ? 1u + tp_key(track, pattern) : 0;
+}
+
+/* --- the trig LEDs --- */
+
+static void tp_led(unsigned id, unsigned on) {
+    uint8_t bit = (uint8_t)(1u << (id % 8));
+    uint8_t now = U8(LED_ON + id / 8);
+    U8(LED_ON + id / 8) = on ? (uint8_t)(now | bit) : (uint8_t)(now & ~bit);
+}
+
+/* The slow blink's dark half. */
+static unsigned tp_blink_dark(void) { return (U32(TIMER) >> BLINK_SHIFT) & 1u; }
+
+/* `track`'s trigs in `pattern` of the playing bank, 16 steps of `page`:
+ * bit k = step 16 * page + k. The trig mask is the track record's first 8
+ * bytes, big-endian, step s at bit s (STEP_LOCKS.md; the GRID REC drawing
+ * 0x40034bd4 reads its halfword 3 - page). */
+static unsigned tp_trigs(unsigned track, unsigned pattern, unsigned page) {
+    uint32_t at = BANK_BLOB + tp_global_bank() * BANK_STRIDE + pattern * PATTERN_STRIDE
+                + (track < 8 ? track * AUDIO_TRACK : MIDI_TRACKS + (track - 8) * MIDI_TRACK)
+                + 6u - 2u * (page & 3u);
+    return (unsigned)U8(at) << 8 | U8(at + 1);
+}
+
+/* After the LED dispatcher 0x4007e998 has run `slot`'s callback, before the
+ * flush (hooks.s): only a track that plays its own pattern changes what
+ * stock drew. Stock's running light (both LEDs of the playhead's key) stays.
+ *  - The main page, GRID REC: the trigs stay stock's (the pattern the keys
+ *    edit) and blink slowly: this track does not play them. In the dark
+ *    half every trig LED goes out; the return value asks hooks.s to light
+ *    the running light again (tp_playhead).
+ *  - The main page, TRACKS trig mode outside GRID REC, where stock shows
+ *    only the running light: the trigs of the pattern the track plays on
+ *    the keys' first LEDs, blinking slowly, over it.
+ *  - The PATTERN layer with TRACK n held: the key of the pattern T_n plays
+ *    is lit as the current one, a change it has queued as a queued one, and
+ *    the global pattern's key as one with content.
+ * Returns the running light's track (0x80000000, MIDI as 8 + t) when it
+ * has to be drawn again, else -1. */
+int tp_leds(unsigned slot) {
+    uint32_t callback = U32(LED_SLOTS + 14u * slot);
+    unsigned global = tp_sync();
+    if (callback == LED_MAIN) {
+        unsigned track = U8(UI_TRACK);
+        if (track > 7) return -1;
+        if (U32(MIDI_MODE)) track += 8;
+        unsigned pattern = tp_pattern(&tp_state, track, global);
+        if (pattern == global) return -1;
+        if (U32(GRID_REC)) {
+            if (!tp_blink_dark()) return -1;
+            for (unsigned id = 0; id < 32; ++id) tp_led(id, 0);
+            return (int)(U8(LIGHT_TRACK) % 8u + (U32(MIDI_MODE) ? 8u : 0u));
+        }
+        if (U32(TRIG_MODE) == 0 && !tp_blink_dark()) {
+            unsigned trigs = tp_trigs(track, pattern, U32(UI_PAGE));
+            for (unsigned k = 0; k < 16; ++k)
+                if ((trigs >> k) & 1u) tp_led(2 * k, 1);
+        }
+    } else if (callback == LED_PATTERN) {
+        unsigned track = tp_held_track();
+        if (track >= TP_TRACKS) return -1;
+        unsigned pattern = tp_pattern(&tp_state, track, global);
+        unsigned shown = U8(UI_PATTERN) % TP_PATTERNS;
+        if (pattern != shown) {
+            tp_led(2 * shown, 0);
+            tp_led(2 * shown + 1, 1);
+        }
+        tp_led(2 * pattern, 1);
+        tp_led(2 * pattern + 1, 0);
+        uint8_t next = tp_state.next[track];
+        if (next) {
+            unsigned queued = next == TP_TO_FOLLOW ? global : next - 1u;
+            tp_led(2 * queued, 1);
+            tp_led(2 * queued + 1, 1);
+        }
+    }
+    return -1;
+}
+
+/* The running light again, as stock draws it (0x40044526..0x40044574):
+ * `step` from the UI step query 0x4009b2b0, shown in GRID REC only when it
+ * is on the page shown. */
+void tp_playhead(unsigned step) {
+    if (U32(GRID_REC) && step / 16u != U32(UI_PAGE)) return;
+    tp_led(2 * (step % 16u), 1);
+    tp_led(2 * (step % 16u) + 1, 1);
 }

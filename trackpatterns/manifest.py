@@ -17,8 +17,8 @@ STATUS (21 Oct 2026): in progress. Engine and glue host-tested; the sites
 below were read from the contributor's original 1.40C (INVESTIGATION.md
 section 4) and are guarded by their stock bytes. Run under the ColdFire
 emulator; on one MKII (build OCTABAM1, 21 Oct 2026) the gesture, following
-again and a global change passed for T1; MIDI tracks not on a unit yet
-(TESTING.md).
+again and a global change passed for T1; MIDI tracks not on a unit yet;
+the trig LEDs (build OCTABAM2) under the emulator only (TESTING.md).
 
   0x400a2d76  audio tick: the pattern argument of 0x4009d1e8
   0x400a39c0  MIDI tick: the pattern argument of 0x4009cf4c
@@ -27,6 +27,9 @@ again and a global change passed for T1; MIDI tracks not on a unit yet
   0x400a3d88  audio per-track advance: the length the counter wraps at
   0x400a3ea8  MIDI per-track advance: the same
   0x40056b50  PATTERN layer's trig press: the gesture, with a TRACK key held
+  0x4007e9b6  LED dispatcher, after a page's LED callback: the trig LEDs of a
+              track on its own pattern (blink in GRID REC, its trigs outside,
+              its pattern in the PATTERN layer while TRACK is held)
 
 Play Modes' step-load and rebuild detours (0x400a2d6a, 0x400a39b6,
 0x4009dc86, 0x4009e3dc) end where these begin; the two share no byte.
@@ -41,7 +44,7 @@ MODULE = Module(
     category=Category.MACHINES,
     author="pgstath", author_url="https://github.com/pgstath",
     proof=Proof.HARDWARE,
-    proof_note="MKII, OCTABAM1, 21 Oct 2026: gesture, follow, global change on T1; MIDI tracks, stopped, save untested",
+    proof_note="MKII, OCTABAM1, 21 Oct 2026: gesture, follow, global change on T1; trig LEDs (OCTABAM2) emulator only",
     doc="Each track plays its own pattern of the playing bank; changes land at the track's loop end.",
     linked=(Linked("trackpatterns", "modules/trackpatterns/trackpatterns.s", cpu="5475", dram=True),),
     detours=(
@@ -59,6 +62,8 @@ MODULE = Module(
                "trackpatterns", "tp_midi_length", "MIDI advance: the length of the track's own pattern", kind="jmp"),
         Detour(0x40056b50, stock_guard(0x40056b50, 6, "5c03ce1dea644685012b6b9fec8445e2efec2d2e96818c3c842fc4311dbbc55a"),
                "trackpatterns", "tp_pattern_key", "PATTERN + TRIG with a TRACK key held: that track's pattern", kind="jmp"),
+        Detour(0x4007e9b6, stock_guard(0x4007e9b6, 6, "d1ac2e808477319c88c966a206c888f0826231d80c01e9e9bf5c14e469a412f3"),
+               "trackpatterns", "tp_led_pass", "LED pass: the trig LEDs of a track on its own pattern", kind="jmp"),
     ),
     gates=(Gate("modules/trackpatterns/verify.py", remix_arg=False),),
 )

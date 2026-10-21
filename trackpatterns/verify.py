@@ -48,4 +48,4 @@ if __name__ == '__main__':
     else:
         print('[SKIP] m68k-elf-gcc not on PATH: ColdFire compile not checked')
     print('[PASS] TRACK PATTERNS ' + ('engine, glue and ColdFire unit' if shutil.which('m68k-elf-gcc')
-                                      else 'engine and glue (host only)') + ' -- emulator: T1, M1, the gesture, a global change; MKII unit: T1 only (TESTING.md)')
+                                      else 'engine and glue (host only)') + ' -- emulator: T1, M1, the gesture, a global change, the trig LEDs; MKII unit: T1 gesture only (TESTING.md)')

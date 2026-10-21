@@ -60,7 +60,7 @@ tp_length_entry:
 
 | ---- the detour stubs ------------------------------------------------------
         .global tp_audio_tick, tp_midi_tick, tp_audio_rebuild, tp_midi_rebuild
-        .global tp_audio_length, tp_midi_length, tp_pattern_key
+        .global tp_audio_length, tp_midi_length, tp_pattern_key, tp_led_pass
 
 | 0x400a2d76, the tick's audio pass, pushing 0x4009d1e8(track, bank,
 | pattern, step, n): the step is already pushed, the pattern stock chose is
@@ -198,6 +198,44 @@ tp_pattern_key:
 .Lkey_stock:
         tst.w   0x460d1ab6              | displaced
         jmp     0x40056b56              | bnes 0x40056b98
+
+| 0x4007e9b6, inside the LED dispatcher 0x4007e998(slot): it calls the LED
+| callback the RAM table holds for the slot (0x460e762c + 14 * slot: the
+| main page's 0x40043fdc, the PATTERN layer's 0x400353d4, ...), then
+| restores d2 and tail-calls the flush 0x400136a8 at 0x4007e9bc. The stub
+| replays the call, lets tp_leds adjust the trig LEDs the callback drew
+| (steady bits 0x460ba98c, nothing else), and joins stock before the
+| flush, which sends what changed. When tp_leds put the trig LEDs out
+| (GRID REC's dark half) it names a track, and the stub draws that track's
+| running light again from stock's own answers: running 0x4009b290(track)
+| == 1, then the step 0x4009b2b0(track) (Play Modes' mapped step when it
+| is installed), as 0x40044516..0x40044528 do. d2 = the slot, kept by
+| every callee; d0/d1/a0/a1 are free (the flush takes none). No branch
+| lands inside the span (the dispatcher's beqs goes to 0x4007e9bc).
+| Displaced: movel %d2,%sp@- ; jsr %a0@ ; addql #4,%sp (6).
+tp_led_pass:
+        move.l  %d2,-(%sp)              | displaced: the slot
+        jsr     (%a0)                   | displaced: the slot's LED callback
+        addq.l  #4,%sp                  | displaced
+        move.l  %d2,-(%sp)
+        jsr     tp_leds                 | a track on its own pattern: the trig LEDs
+        addq.l  #4,%sp
+        tst.l   %d0
+        bmi.s   .Lled_done
+        move.l  %d0,-(%sp)              | the running light's track
+        move.l  %d0,-(%sp)
+        jsr     0x4009b290              | running?
+        addq.l  #4,%sp
+        moveq   #1,%d1
+        cmp.l   %d1,%d0
+        bne.s   .Lled_drop
+        jsr     0x4009b2b0              | its step (the track is still on the stack)
+        move.l  %d0,(%sp)
+        jsr     tp_playhead             | light its key again
+.Lled_drop:
+        addq.l  #4,%sp
+.Lled_done:
+        jmp     0x4007e9bc              | movel %sp@+,%d2 ; jmp 0x400136a8 (the flush)
 
 | Explicitly initialised, loader-owned DRAM, zeroed: every track follows
 | the global pattern until a change is queued. The C's _Static_assert pins

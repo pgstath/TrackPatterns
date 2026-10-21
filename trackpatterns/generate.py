@@ -19,12 +19,14 @@ FLAGS = ['-mcpu=5475', '-msoft-float', '-O2', '-ffreestanding', '-fno-builtin', 
          '-fno-ident', '-fomit-frame-pointer', '-std=c11', '-Wall', '-Wextra', '-Werror']
 SOURCES = ('trackpattern.c', 'adapter.c')
 # Stock targets the unit may reach besides its own labels: the places the
-# detour stubs jump back to (hooks.s, manifest.py) and the two stock calls
-# of the key stub (the toast 0x4005a2b8, the rebuild 0x4009da20). Anything
+# detour stubs jump back to (hooks.s, manifest.py), the two stock calls of
+# the key stub (the toast 0x4005a2b8, the rebuild 0x4009da20) and the two of
+# the LED stub (running? 0x4009b290, the UI step 0x4009b2b0). Anything
 # else (a libgcc helper, a memset the optimiser invented, a mistyped
 # address) fails.
 STOCK_CALLS = {'0x400a2d7c', '0x400a39c6', '0x4009dc94', '0x4009e3ea', '0x400a3d8e', '0x400a3eae',
-               '0x40056b56', '0x40056ba4', '0x4005a2b8', '0x4009da20'}
+               '0x40056b56', '0x40056ba4', '0x4005a2b8', '0x4009da20', '0x4007e9bc',
+               '0x4009b290', '0x4009b2b0'}
 
 
 def compiler():

@@ -19,9 +19,10 @@ pattern stayed A01, and a global change to A02 brought both back. On an
 MKII (build `OCTABAM1`, 21 Oct 2026) the gesture, the way back to following
 and a global change clearing the override passed for T1; MIDI tracks, the
 stopped case and saving are not tested on a unit yet
-([TESTING.md](trackpatterns/TESTING.md)). The track's speed stays the
-playing pattern's, the trig LEDs show the global pattern, and nothing is
-saved ([INVESTIGATION.md](trackpatterns/INVESTIGATION.md)).
+([TESTING.md](trackpatterns/TESTING.md)). Build `OCTABAM2` adds the trig
+LEDs for a track on its own pattern (emulator only so far). The track's
+speed stays the playing pattern's, and nothing is saved
+([INVESTIGATION.md](trackpatterns/INVESTIGATION.md)).
 
 ## v1 behaviour (from the proposal)
 
@@ -32,7 +33,8 @@ saved ([INVESTIGATION.md](trackpatterns/INVESTIGATION.md)).
 | Back to normal | The global pattern's trig, or any global pattern change (a bank change too), which clears every override |
 | Sound design | Always the playing Part |
 | Length and scale | The track loops at its source pattern's length and scale |
-| Trig LEDs, editing, recording | Still the global pattern (a known v1 limit) |
+| Trig LEDs ([proposal](https://claude.ai/artifact/KsJYqnuHdtNacaXh98vJjQ)) | For the current track, when it plays its own pattern. Outside GRID REC (TRACKS trig mode), where stock shows only the running light: that pattern's trigs, blinking slowly. In GRID REC: stock's trigs (the global pattern the keys edit), blinking slowly as a warning. The running light stays in both. Hold TRACK n + PATTERN: the pattern T_n plays lights as the current one, a change it has queued as a queued one |
+| Editing, recording | Still the global pattern (a known v1 limit) |
 | Saving | Not saved |
 
 ## Layout
@@ -41,7 +43,7 @@ saved ([INVESTIGATION.md](trackpatterns/INVESTIGATION.md)).
 |---|---|
 | `trackpatterns/trackpattern.h`, `trackpattern.c` | the engine: per-track sources, the queue, loop-start detection; pure C |
 | `trackpatterns/adapter.c` | firmware glue: the sequencer's bytes, the entries the detours call, the popup text |
-| `trackpatterns/hooks.s` | the seven detour stubs, register-saving entries and DRAM state |
+| `trackpatterns/hooks.s` | the eight detour stubs, register-saving entries and DRAM state |
 | `trackpatterns/manifest.py` | the native declaration: the unit and its detours, each guarded by stock bytes |
 | `trackpatterns/test-remix.py` | the test image: TRACK PATTERNS on the stock effects |
 | `trackpatterns/generate.py` | compiles the three into the ColdFire unit `trackpatterns.s` |

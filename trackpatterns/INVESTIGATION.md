@@ -29,6 +29,10 @@ never firmware listings.
 | the PATTERN layer's trig press `0x40056b2c(code)`: cancels the latch's timer, marks a trig pressed (`0x460d173e = -1`), selects the global pattern `0x400a1030(bank, code)` for the first trig of the hold or chains `0x4009c634(code)` for another, sets the trig's bit in `0x460d1ab6`, tail `0x40027de4`; its release `0x40043444` clears the bit | key map `0x400bef04` | read 21 Oct 2026 | 📖 ✅ emu |
 | MIDI mode: TRACK keys address M1–M8 | `0x80000012 != 0`, toggled by the MIDI key `0x35` (`0x4005557a`) | Play Modes; emulator 21 Oct 2026 | ✅ emu |
 | the MIDI step handler's plain trig writes `0x1d` into the same table `0x46c7a810[t]` (t = the MIDI track 0..7) | pc `0x4009d0fc` | read and run 21 Oct 2026 | ✅ emu |
+| LEDs: steady on/off bits `0x460ba98c` (17 bytes, id n = byte n/8, bit n%8; on `0x400131a0`, off `0x400131c8`), timed bits `0x460ba9ae` XORed over them; no hardware blink. Trig key k = LEDs 2k (sample trigs) and 2k + 1 | tables `0x400a766e`, `0x400a76ae` | octabam PANEL.md §8–9; read 21 Oct 2026 | 📖 ✅ emu |
+| the LED dispatcher `0x4007e998(slot)`: calls the callback at `0x460e762c + 14·slot`, then flushes `0x400136a8`; runs every few ms, playing or stopped | callbacks: main page `0x40043fdc`, PATTERN layer `0x400353d4` | read and run 21 Oct 2026 | 📖 ✅ emu |
+| main page LEDs `0x40043fdc`: GRID REC → `0x40034bd4` draws the current track's trigs from the UI's cursor (bank base `*0x46c82456`, track `0x100b14cc`, pattern `0x100b14d0`, page `0x460d1e04`); TRACKS mode outside GRID REC → no trigs, only flashes; then the running light: both LEDs of the key of step `0x4009b2b0(t)` if `0x4009b290(t)` == 1, t = `0x80000000` (+8 MIDI), in GRID REC only on the page shown | `0x40043fdc..0x40044574` | read 21 Oct 2026 | 📖 ✅ emu |
+| PATTERN layer LEDs `0x400353d4`: the UI pattern `0x100b14d0` first LED; a queued pattern both; others the second LED when `0x4009a464(pattern, bank)` says it has content | | read 21 Oct 2026 | 📖 ✅ emu |
 
 ## 2. Still to find
 
@@ -76,6 +80,7 @@ pattern change clears it. The same for M1 with MIDI out captured.
 | `0x400a3d88` audio advance, 6 | `mvzb %d1,%d1` ; `mvsb %d0,%d0` ; `cmpl %d1,%d0` (counter vs length) | compares with `tp_length_entry(d3, d0)`; the `bgts` after it tests our compare | 📖 |
 | `0x400a3ea8` MIDI advance, 6 | the same, d3 = 8..15, the length from the MIDI record's `+0x28` | the same | 📖 |
 | `0x40056b50` PATTERN layer's trig press, 6 | `tstw 0x460d1ab6` (the hold's trig mask: select or chain next); d2 = the trig, a2 = the redraw `0x400418e0` | with a TRACK key held (`tp_gesture`): redraw, toast, rebuild `0x4009da20(-1)`, then joins stock at `0x40056ba4` (mark the trig, tail `0x40027de4`); otherwise replays the test and returns to the `bnes` at `0x40056b56` | 📖 ✅ emu ✅ unit (MKII, T1) |
+| `0x4007e9b6` LED dispatcher, 6 | `movel %d2,%sp@-` ; `jsr %a0@` (the slot's LED callback) ; `addql #4,%sp` | replays the call, then `tp_leds(slot)` adjusts the steady trig bits for a current track on its own pattern; after GRID REC's dark half it relights the running light from `0x4009b290` / `0x4009b2b0`; joins stock at `0x4007e9bc` before the flush | 📖 ✅ emu |
 
 How the tick picks a step's pattern: with a pattern change pending for
 the step it prepares (a flag in d3 at `0x400a2c64`), it takes bank and
@@ -91,7 +96,10 @@ and pattern arguments, ORs the track's four step masks and tests the step
 bit at `0x4009d3a0`; a plain trig writes `0x1d` into the per-track table
 `0x46c7a810[t]` at `0x4009d42a`, which the port run below watches.
 
-No branch lands inside any of the seven spans; Play Modes' detours end
+No branch lands inside any of the eight spans; Play Modes' detours end
 where these begin (`0x400a2d74`, `0x400a39be`, `0x4009dc8c`, `0x4009e3e2`).
 No Modwerk module or base site patches `0x40056b2c..0x40056bc0` (the
-octakit draft only names `0x40056b2c` and `0x40056b6e` in its ABI list).
+octakit draft only names `0x40056b2c` and `0x40056b6e` in its ABI list)
+or the LED dispatcher `0x4007e998..0x4007e9c4`. The LED stub calls
+`0x4009b2b0`, Play Modes' detoured step query, as stock's running light
+does: with Play Modes installed it gets the mapped step, as stock would.
