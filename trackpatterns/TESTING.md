@@ -105,7 +105,45 @@ TRIG); TRACK pressed after PATTERN; the rebuild path (an edit while a track
 is on another pattern); a different length per track; Play Modes built
 alongside; cycle counts; any unit.
 
+## Unit build 1 (21 Oct 2026)
+
+`make image REMIX=trackpatterns-test BUILD=1` in the Modwerk scratch
+worktree (`c0f513b9`), module source = this repository at `3c581df`, from
+the contributor's own OS 1.40C (`.syx` `0a8d2d2b35c2…`, `.bin`
+`34695b606eb0…`, Elektron's files). Version string `OCTABAM1`.
+
+| file | SHA-256 |
+|---|---|
+| `OCTATRACK_OCTABAM1.bin` (card path) | `ec04c849fb85513ba3d9c3863af501233bb61e7edd3387c2cea598506cce2db4` |
+| `OCTATRACK_OS1.40C_OCTABAM1.syx` (MIDI path) | `a54d8d1810a198c93f8368b0f151ce69678cd1432e41744b87cc5ced9adad9d0` |
+| `mainos_bus.bin` (the OS section the emulator runs) | `906085659919a8b41394f7e4ce253258cccb52418a63d34d6a8555b5e6aa7849` |
+
+The card file's checksum validates (`bin_decode.py`). The gesture run above
+repeated on this exact `mainos_bus.bin` gives the same 72 events at the same
+times, booted as an MKI (the emulator's default, as every run above) and
+with `--mkii`.
+
+### On the unit: MKII, 21 Oct 2026, reported by pgstath
+
+Image `OCTABAM1` above, flashed from the card. Test project as in the plan:
+bank A, T1 trigs A01 1/5/9/13, A02 2/10, A03 3/7/11/15; M1 trigs A01
+1/9, A03 5/13; all 16 steps. Only what the contributor reported:
+
+| # | test | result |
+|---|---|---|
+| 1 | stock PATTERN + TRIG 3 switches every track to A03 at the pattern's end | pass |
+| 2 | hold TRACK 1, hold PATTERN, TRIG 3: popup `T1 ▸ A03`, screen stays A01, T1 switches at its own loop start | pass |
+| 3 | TRACK 1 + PATTERN + TRIG 1: `T1 FOLLOWS`, T1 back on A01 at its loop start | pass |
+| 4 | MIDI mode, M1 to A03; note-offs across the switch | not tested |
+| 5 | with T1 on A03, PATTERN + TRIG 2 (no TRACK held): A02 at the pattern's end, T1 on A02's trigs | pass |
+| 6 | the gesture while stopped, then PLAY | not tested |
+| 7 | latched PATTERN, TRACK after PATTERN, chains, GRID REC | not tested |
+| 8 | save, power cycle | not tested |
+
+Not reported: how long it ran, other tracks, CPU load, cycles.
+
 ## Not yet
 
-The track's speed from its own pattern, persistence, trig LEDs per track,
-cycle counts, any unit.
+On the unit: MIDI tracks, the stopped case, the latched PATTERN, save and
+power cycle, a long run. Anywhere: the track's speed from its own pattern,
+persistence, trig LEDs per track, cycle counts.

@@ -75,7 +75,7 @@ pattern change clears it. The same for M1 with MIDI out captured.
 | `0x4009e3e2` MIDI rebuild, 8 | `mvsb 0x800065be,%d2` ; `movel %d2,%sp@-` (the step still in d2) | the same for d6 = 8..15, then d2 as stock leaves it | 📖 |
 | `0x400a3d88` audio advance, 6 | `mvzb %d1,%d1` ; `mvsb %d0,%d0` ; `cmpl %d1,%d0` (counter vs length) | compares with `tp_length_entry(d3, d0)`; the `bgts` after it tests our compare | 📖 |
 | `0x400a3ea8` MIDI advance, 6 | the same, d3 = 8..15, the length from the MIDI record's `+0x28` | the same | 📖 |
-| `0x40056b50` PATTERN layer's trig press, 6 | `tstw 0x460d1ab6` (the hold's trig mask: select or chain next); d2 = the trig, a2 = the redraw `0x400418e0` | with a TRACK key held (`tp_gesture`): redraw, toast, rebuild `0x4009da20(-1)`, then joins stock at `0x40056ba4` (mark the trig, tail `0x40027de4`); otherwise replays the test and returns to the `bnes` at `0x40056b56` | 📖 ✅ emu |
+| `0x40056b50` PATTERN layer's trig press, 6 | `tstw 0x460d1ab6` (the hold's trig mask: select or chain next); d2 = the trig, a2 = the redraw `0x400418e0` | with a TRACK key held (`tp_gesture`): redraw, toast, rebuild `0x4009da20(-1)`, then joins stock at `0x40056ba4` (mark the trig, tail `0x40027de4`); otherwise replays the test and returns to the `bnes` at `0x40056b56` | 📖 ✅ emu ✅ unit (MKII, T1) |
 
 How the tick picks a step's pattern: with a pattern change pending for
 the step it prepares (a flag in d3 at `0x400a2c64`), it takes bank and

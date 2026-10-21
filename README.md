@@ -11,11 +11,14 @@ This repository implements its phase 1 (v1), first as a native octabam /
 Modwerk module; in Modwerk it is meant to sit on a shared base event for the
 step source (phase 0), beside Play Modes.
 
-**Status: in progress, not on any unit.** The engine, the glue, the six
-sequencer detours and the key gesture are written; the host gate passes.
-Under the ColdFire emulator, T1 and then M1 were switched by the gesture
-from A01 to A03, each at its own loop start, while the global pattern stayed
-A01, and a global change to A02 brought both back
+**Status: in progress, partly tested on one unit.** The engine, the glue,
+the six sequencer detours and the key gesture are written; the host gate
+passes. Under the ColdFire emulator, T1 and then M1 were switched by the
+gesture from A01 to A03, each at its own loop start, while the global
+pattern stayed A01, and a global change to A02 brought both back. On an
+MKII (build `OCTABAM1`, 21 Oct 2026) the gesture, the way back to following
+and a global change clearing the override passed for T1; MIDI tracks, the
+stopped case and saving are not tested on a unit yet
 ([TESTING.md](trackpatterns/TESTING.md)). The track's speed stays the
 playing pattern's, the trig LEDs show the global pattern, and nothing is
 saved ([INVESTIGATION.md](trackpatterns/INVESTIGATION.md)).
