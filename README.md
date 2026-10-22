@@ -11,18 +11,31 @@ This repository implements its phase 1 (v1), first as a native octabam /
 Modwerk module; in Modwerk it is meant to sit on a shared base event for the
 step source (phase 0), beside Play Modes.
 
-**Status: in progress, tested on one unit.** The engine, the glue, the six
-sequencer detours, the key gesture and the trig LEDs are written; the host
-gate passes. Under the ColdFire emulator, T1 and then M1 were switched by
-the gesture from A01 to A03, each at its own loop start, while the global
-pattern stayed A01, and a global change to A02 brought both back. On an
-MKII (build `OCTABAM2`, 21 Oct 2026) the contributor ran the functional
-tests (the gesture on T1 and M1, following again, a global change, the
-stopped case, chains and GRID REC, save and power cycle) and the trig LED
-checks, and reported all of them as passed
-([TESTING.md](trackpatterns/TESTING.md)). Not measured yet: cycles,
-memory, a long run. The track's speed stays the playing pattern's, and
-nothing is saved ([INVESTIGATION.md](trackpatterns/INVESTIGATION.md)).
+**Status: 0.1.0, experimental, tested on one MKII.** The same code is
+submitted to octabam as [sambanks/octabam#846](https://github.com/sambanks/octabam/pull/846).
+Everything below is recorded in [TESTING.md](trackpatterns/TESTING.md).
+
+- **Host gate:** passes.
+- **Under the ColdFire emulator:** T1 and then M1 were switched by the
+  gesture from A01 to A03, each at its own loop start, while the global
+  pattern stayed A01; a global change to A02 brought both back. MKI and
+  MKII behaved the same.
+- **On the contributor's MKII** (21–22 Oct 2026), these were reported as
+  passed:
+  - `OCTABAM1`, `OCTABAM2` and `OCTABAM3`: the gesture on T1 and on M1,
+    following again, a global change, the stopped case, chains and GRID
+    REC, save and power cycle, and the trig LED checks.
+  - `OCTABAM8`: the same gesture, global-change and save tests beside KITS
+    and DIRECT JUMP (Kyoti).
+  - `OCTABAM9`: a 32-step override and the other trig modes, CHROMATIC
+    included.
+  - CF METER, with and without the module (see Cost).
+- **Not measured:** a long run, and chip cycles per detour.
+- **Open:** a silent hang, not yet explained. On `OCTABAM2` and `OCTABAM3`
+  the unit hung after 5–20 minutes on the main playback screen with an
+  override set.
+- **By design:** the track's speed stays the playing pattern's, and nothing
+  is saved ([INVESTIGATION.md](trackpatterns/INVESTIGATION.md)).
 
 ## v1 behaviour (from the proposal)
 
@@ -32,8 +45,8 @@ nothing is saved ([INVESTIGATION.md](trackpatterns/INVESTIGATION.md)).
 | When it lands | At the end of that track's loop; while stopped, at once |
 | Back to normal | The global pattern's trig, or any global pattern change (a bank change too), which clears every override |
 | Sound design | Always the playing Part |
-| Length and scale | The track loops at its source pattern's length and scale |
-| Trig LEDs ([proposal](https://claude.ai/artifact/KsJYqnuHdtNacaXh98vJjQ)) | For the current track, when it plays its own pattern. Outside GRID REC (TRACKS trig mode), where stock shows only the running light: that pattern's trigs, blinking slowly. In GRID REC: stock's trigs (the global pattern the keys edit), blinking slowly as a warning. The running light stays in both. Hold TRACK n + PATTERN: the pattern T_n plays lights as the current one, a change it has queued as a queued one |
+| Length and scale | Under SCALE MODE PER TRACK the track loops at its own length in its source pattern, inside the global pattern's MASTER LENGTH, which still restarts every track. Under NORMAL every track wraps at the global pattern's length. Speed (scale) stays the playing pattern's |
+| Trig LEDs ([proposal](https://claude.ai/artifact/KsJYqnuHdtNacaXh98vJjQ)) | For the current track, when it plays its own pattern. Outside GRID REC (TRACKS trig mode), where stock shows only the running light: that pattern's trigs, blinking slowly, from the 16 steps its playhead is in. In other trig modes (CHROMATIC included) the module draws nothing. In GRID REC: stock's trigs (the global pattern the keys edit), blinking slowly as a warning. The running light stays in both. Hold TRACK n + PATTERN: the pattern T_n plays lights as the current one, a change it has queued as a queued one |
 | Editing, recording | Still the global pattern (a known v1 limit) |
 | Saving | Not saved |
 
@@ -61,6 +74,50 @@ python3 generate.py        # refresh trackpatterns.s after a change
 
 No firmware is included here or may ever be committed; images, listings and
 probes stay in git-ignored `out/`.
+
+`trackpatterns/manifest.py` is the Modwerk form: each detour is guarded by
+the address, length and SHA-256 of the stock bytes it replaces. The octabam
+submission (#846) carries the same code with octabam's usual literal-byte
+guards.
+
+## Cost
+
+**Under the emulator** (`ot_emu --mkii`), instructions per call, median /
+max, counting the stock instructions each detour replays:
+
+| detour | median / max |
+|---|---|
+| audio tick | 86 / 95 |
+| MIDI tick | 89 / 98 |
+| audio advance | 60 / 186 |
+| MIDI advance | 60 / 84 |
+| the LED pass's own part | 52 / 658 |
+
+A 16-track step is about 2,360 instructions, 3,700 at most.
+
+**Memory:** 3,457 B of code and data in the DRAM reserve; no `.bss`, heap,
+battery RAM or DSP words. The stack is about 72 B.
+
+**On an MKII with CF METER** (300 BPM, a trig on every step of 15 tracks):
+- With the module loaded and every track following, idle time and the frame
+  interrupt match the build without it, within the noise.
+- With eight tracks on their own patterns, the LED pass and gestures, idle is
+  1.5 points lower (about 5.4 µs of each 362.8 µs frame). The interrupt's
+  mean is unchanged, and no frame ran late.
+
+## Compatibility
+
+- **On the unit:** beside KITS and DIRECT JUMP (Kyoti), in octabam-core
+  (`OCTABAM8`).
+- **Emulator only:** beside Play Modes (0.1.1 and 0.2.0), Euclid, Tape Echo,
+  Mini Verb, E-Verb and USB audio, in one Modwerk image.
+  - The detour ledger reports no shared byte; Play Modes patches the
+    neighbouring instructions in the same sequencer functions.
+  - The gesture run and the trig LEDs match the module alone.
+
+## Releases
+
+See [CHANGELOG.md](CHANGELOG.md).
 
 ## Credits
 
