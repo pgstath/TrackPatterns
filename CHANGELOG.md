@@ -9,17 +9,15 @@ The first release. This is the code submitted to octabam as
   - Track n plays pattern k of the playing bank from the end of its own
     loop, so it stays in time.
   - While the sequencer is stopped, the change happens at once.
-  - In MIDI mode the TRACK keys address M1–M8.
-  - A popup names the change (`T1 ▸ A03`, `T1 FOLLOWS`).
+  - A popup names the change when it is done displaying (`T1 ▸ A03`, or `T1 FOLLOWS` when the pattern is back to the original).
 - **Back to the global pattern:** press the global pattern's trig for one
   track. Any global pattern change, a bank change included, brings every
   track back.
-- **Trig LEDs** for the current track when it plays its own pattern:
+- **Trig LEDs** for the current track when it plays its own pattern and not the global one: 
   - Outside GRID REC, that pattern's trigs blink from the 16 steps its
     playhead is in.
   - In GRID REC, the stock trigs blink as a warning.
-  - TRACK n + PATTERN lights the pattern T_n plays, and any change it has
-    queued.
+  - TRACK n + PATTERN lights the pattern T_n plays.
 - **Size and patches:** one DRAM unit (3,457 B) and eight detours, each
   guarded by the stock bytes it replaces.
 
@@ -28,13 +26,12 @@ and under the ColdFire emulator. [trackpatterns/TESTING.md](trackpatterns/TESTIN
 has every run.
 
 **Known limits:**
-- Editing and recording address the global pattern.
-- Overrides are not saved.
+- Editing and recording the global pattern.
+- Track Pattern overrides are not saved.
 - A track's speed stays the playing pattern's.
 - Under NORMAL every track wraps at the global pattern's length.
 
 **Open:**
-- A long run.
 - A silent hang, not yet explained. On `OCTABAM2` and `OCTABAM3` the unit
   hung after 5–20 minutes on the main playback screen with an override set.
   It is under investigation; `OCTABAM6`, without the LED pass, is the
