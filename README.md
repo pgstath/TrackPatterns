@@ -2,7 +2,7 @@
 
 Per-track patterns for the Elektron Octatrack (original OS 1.40C): each of the
 16 tracks (T1–T8, M1–M8) can play its own pattern of the playing bank and
-change it on its own, clip style, as on the Korg SQ-64. A change lands at the
+change it on its own, resembling a clip style workflow. A change lands at the
 end of that track's own loop, so it stays in time; the sound (the Part's
 machines, samples, FX) stays as it is.
 
@@ -16,7 +16,7 @@ submitted to octabam as [sambanks/octabam#846](https://github.com/sambanks/octab
 Everything below is recorded in [TESTING.md](trackpatterns/TESTING.md).
 
 - **Host gate:** passes.
-- **Under the ColdFire emulator:** T1 and then M1 were switched by the
+- **Under the ColdFire emulator:** T1  (Track 1) and then M1 (MIDI Track 1) were switched by the
   gesture from A01 to A03, each at its own loop start, while the global
   pattern stayed A01; a global change to A02 brought both back. MKI and
   MKII behaved the same.
@@ -30,7 +30,7 @@ Everything below is recorded in [TESTING.md](trackpatterns/TESTING.md).
   - `OCTABAM9`: a 32-step override and the other trig modes, CHROMATIC
     included.
   - CF METER, with and without the module (see Cost).
-- **Not measured:** a long run, and chip cycles per detour.
+- **Not measured:** a long run over 30mins, and chip cycles per detour.
 - **Open:** a silent hang, not yet explained. On `OCTABAM2` and `OCTABAM3`
   the unit hung after 5–20 minutes on the main playback screen with an
   override set.
@@ -46,8 +46,8 @@ Everything below is recorded in [TESTING.md](trackpatterns/TESTING.md).
 | Back to normal | The global pattern's trig, or any global pattern change (a bank change too), which clears every override |
 | Sound design | Always the playing Part |
 | Length and scale | Under SCALE MODE PER TRACK the track loops at its own length in its source pattern, inside the global pattern's MASTER LENGTH, which still restarts every track. Under NORMAL every track wraps at the global pattern's length. Speed (scale) stays the playing pattern's |
-| Trig LEDs ([proposal](https://claude.ai/artifact/KsJYqnuHdtNacaXh98vJjQ)) | For the current track, when it plays its own pattern. Outside GRID REC (TRACKS trig mode), where stock shows only the running light: that pattern's trigs, blinking slowly, from the 16 steps its playhead is in. In other trig modes (CHROMATIC included) the module draws nothing. In GRID REC: stock's trigs (the global pattern the keys edit), blinking slowly as a warning. The running light stays in both. Hold TRACK n + PATTERN: the pattern T_n plays lights as the current one, a change it has queued as a queued one |
-| Editing, recording | Still the global pattern (a known v1 limit) |
+| Trig LEDs | For the current track, when it plays its own pattern as in stock. When the current track does not play the current globally selected pattern, in GRID_REC mode  the patterns trigs, blinking slowly, from the 16 steps its playhead is in. In other trig modes (CHROMATIC included) the module draws nothing. The design reason behind it is to show the performer that the current sequence shown and blinking is not the one played. |
+| Editing and recording | Still done in the global pattern (a known v1 limit). Treat this version as performance-focused and not editing/composition focused |
 | Saving | Not saved |
 
 ## Layout
